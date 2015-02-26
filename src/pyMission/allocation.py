@@ -21,10 +21,14 @@ class AllocationProblem(Assembly):
     """ Allocation problem containing a set of mission analyses """
 
     def __init__(self, problem_file):
+        self.problem_file = problem_file
+
         super(AllocationProblem, self).__init__()
 
+    def configure(self):
+
         data = {}
-        execfile(problem_file, data)
+        execfile(self.problem_file, data)
         misc_data = data['misc_data']
         ac_data = data['ac_data']
         rt_data = data['rt_data']
@@ -215,9 +219,9 @@ if __name__ == '__main__':
                 print spaces + "component: ", k
             else:
                 md = asmb.get_metadata(k)
-                if md.get('framework_var') or md.get('iotype')=='out':
+                if md.get('framework_var') or md.get('iotype')=='in':
                     continue
-                print spaces + "var: ", k,
+                print spaces + "var: ", k
                 pp(v, indent=indent)
 
     alloc = AllocationProblem('problem_3rt_2ac.py')

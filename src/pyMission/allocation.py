@@ -191,20 +191,25 @@ if __name__ == '__main__':
 
     def setup_opt(seg):
         asm = set_as_top(Assembly())
-        asm.add('driver', pyOptSparseDriver())
-        asm.driver.optimizer = 'SNOPT'
-        asm.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
+
+        from openmdao.main.test.simpledriver import SimpleDriver
+        asm.add('driver', SimpleDriver())
+        # asm.add('driver', pyOptSparseDriver())
+        # asm.driver.optimizer = 'SNOPT'
+        # asm.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
         asm.driver.gradient_options.lin_solver = "linear_gs"
-        asm.driver.gradient_options.maxiter = 1
-        asm.driver.gradient_options.derivative_direction = 'adjoint'
-        asm.driver.gradient_options.iprint = 0
+        # asm.driver.gradient_options.maxiter = 1
+        # asm.driver.gradient_options.derivative_direction = 'adjoint'
+        # asm.driver.gradient_options.iprint = 0
+        asm.driver.gradient_options.rtol = 1e-20
+        asm.driver.gradient_options.atol = 1e-20
         asm.driver.system_type = 'serial'
 
         asm.add('segment', seg)
         asm.driver.add_objective('segment.fuelburn')
         asm.driver.add_parameter('segment.h_pt', low=0.0, high=14.1)
-        asm.driver.add_constraint('segment.h[0] = 0.0')
-        asm.driver.add_constraint('segment.h[-1] = 0.0')
+        asm.driver.add_constraint('segment.h[0] = 0.0', linear=True)
+        asm.driver.add_constraint('segment.h[-1] = 0.0', linear=True)
         asm.driver.add_constraint('segment.Tmin < 0.0')
         asm.driver.add_constraint('segment.Tmax < 0.0')
         asm.driver.add_constraint('%.15f < segment.Gamma < %.15f' % \
@@ -239,7 +244,13 @@ if __name__ == '__main__':
             seg = alloc.get(seg_name)
             sub_opt = setup_opt(seg)
 
+
+            twiddle = np.random.random(sub_opt.segment.h_pt.shape)*.2 + 1
+            sub_opt.segment.h_pt*=twiddle
             sub_opt.run()
+            #sub_opt.driver.check_gradient(inputs=('segment.h_pt', ), outputs=('segment.Tmax',), fd_form="central", fd_step_type="absolute")
+            sub_opt.segment.check_comp_derivatives()
+            exit()
 
             call(['mv', 'SNOPT_print.out', 'SNOPT_%03i_%03i_print.out' % (irt,inac)])
             call(['rm', 'SNOPT_summary.out'])
@@ -259,8 +270,8 @@ if __name__ == '__main__':
     for irt in xrange(alloc.num_routes):
         for inac in xrange(alloc.num_new_ac):
             alloc.driver.add_parameter(seg_name+'.h_pt_%03i_%03i'%(irt,inac), low=0.0, high=14.1)
-            alloc.driver.add_constraint(seg_name+'.h_%03i_%03i[0] = 0.0'%(irt,inac))
-            alloc.driver.add_constraint(seg_name+'.h_%03i_%03i[-1] = 0.0'%(irt,inac))
+            alloc.driver.add_constraint(seg_name+'.h_%03i_%03i[0] = 0.0'%(irt,inac), linear=True)
+            alloc.driver.add_constraint(seg_name+'.h_%03i_%03i[-1] = 0.0'%(irt,inac), linear=True)
             alloc.driver.add_constraint(seg_name+'.Tmin_%03i_%03i < 0.0'%(irt,inac))
             alloc.driver.add_constraint(seg_name+'.Tmax_%03i_%03i < 0.0'%(irt,inac))
             alloc.driver.add_constraint('%.15f < '+seg_name+'.Gamma_%03i_%03i < %.15f'%

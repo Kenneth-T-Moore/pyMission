@@ -115,8 +115,8 @@ class SysTau(Component):
         self.add('tau', Array(np.zeros((num_elem+1, )), iotype='out',
                                  desc = 'Throttle setting'))
 
-        #self.thrust_scale = 0.072
-        self.thrust_scale = 72
+        self.thrust_scale = 0.072
+        #self.thrust_scale = 72
 
     def execute(self):
         """ Compute throttle setting primarily using thrust coefficient """
@@ -276,5 +276,3 @@ class SysTauSurrogate(Component):
         thrust = [float(i) for i in thrust]
         drag = [float(i) for i in drag]
         TSFC = [float(i) for i in TSFC]
-
-

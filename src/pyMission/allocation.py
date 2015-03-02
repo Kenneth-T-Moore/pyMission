@@ -193,14 +193,14 @@ if __name__ == '__main__':
         asm = set_as_top(Assembly())
 
         from openmdao.main.test.simpledriver import SimpleDriver
-        asm.add('driver', SimpleDriver())
-        # asm.add('driver', pyOptSparseDriver())
-        # asm.driver.optimizer = 'SNOPT'
-        # asm.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
+        # asm.add('driver', SimpleDriver())
+        asm.add('driver', pyOptSparseDriver())
+        asm.driver.optimizer = 'SNOPT'
+        asm.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
         asm.driver.gradient_options.lin_solver = "linear_gs"
-        # asm.driver.gradient_options.maxiter = 1
-        # asm.driver.gradient_options.derivative_direction = 'adjoint'
-        # asm.driver.gradient_options.iprint = 0
+        asm.driver.gradient_options.maxiter = 1
+        asm.driver.gradient_options.derivative_direction = 'adjoint'
+        asm.driver.gradient_options.iprint = 0
         asm.driver.gradient_options.rtol = 1e-20
         asm.driver.gradient_options.atol = 1e-20
         asm.driver.system_type = 'serial'
@@ -244,16 +244,15 @@ if __name__ == '__main__':
             seg = alloc.get(seg_name)
             sub_opt = setup_opt(seg)
 
-
-            twiddle = np.random.random(sub_opt.segment.h_pt.shape)*.2 + 1
-            sub_opt.segment.h_pt*=twiddle
+            #twiddle = np.random.random(sub_opt.segment.h_pt.shape)*.2 + 1
+            #sub_opt.segment.h_pt*=twiddle
             sub_opt.run()
             #sub_opt.driver.check_gradient(inputs=('segment.h_pt', ), outputs=('segment.Tmax',), fd_form="central", fd_step_type="absolute")
-            sub_opt.segment.check_comp_derivatives()
-            exit()
+            #exit()
 
             call(['mv', 'SNOPT_print.out', 'SNOPT_%03i_%03i_print.out' % (irt,inac)])
             call(['rm', 'SNOPT_summary.out'])
+            exit()
 
     alloc.replace('driver', pyOptSparseDriver())
     alloc.driver.optimizer = 'SNOPT'

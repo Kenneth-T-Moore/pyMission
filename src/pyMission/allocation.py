@@ -244,11 +244,33 @@ if __name__ == '__main__':
             seg = alloc.get(seg_name)
             sub_opt = setup_opt(seg)
 
-            #twiddle = np.random.random(sub_opt.segment.h_pt.shape)*.2 + 1
-            #sub_opt.segment.h_pt*=twiddle
-            sub_opt.run()
-            #sub_opt.driver.check_gradient(inputs=('segment.h_pt', ), outputs=('segment.Tmax',), fd_form="central", fd_step_type="absolute")
+            #sub_opt._setup()
+            #from openmdao.util.dotgraph import plot_system_tree
+            #plot_system_tree(sub_opt._system)
             #exit()
+
+            profile = False
+            if profile:
+                import cProfile
+                import pstats
+                import sys
+                cProfile.run('sub_opt.run()', 'alloc_stats')
+                p = pstats.Stats('alloc_stats')
+                p.strip_dirs()
+                p.sort_stats('time')
+                p.print_stats()
+                print '\n\n---------------------\n\n'
+                p.print_callers()
+                print '\n\n---------------------\n\n'
+                p.print_callees()
+                exit()
+
+            else:
+                #twiddle = np.random.random(sub_opt.segment.h_pt.shape)*.2 + 1
+                #sub_opt.segment.h_pt*=twiddle
+                sub_opt.run()
+                #sub_opt.driver.check_gradient(inputs=('segment.h_pt', ), outputs=('segment.Tmax',), fd_form="central", fd_step_type="absolute")
+                #exit()
 
             call(['mv', 'SNOPT_print.out', 'SNOPT_%03i_%03i_print.out' % (irt,inac)])
             call(['rm', 'SNOPT_summary.out'])

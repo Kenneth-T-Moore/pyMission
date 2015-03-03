@@ -286,7 +286,7 @@ class MissionSegment(Assembly):
 
         self.driver.gradient_options.lin_solver = "linear_gs"
         self.driver.gradient_options.maxiter = 1
-        self.driver.gradient_options.derivative_direction = 'adjoint'
+        #self.driver.gradient_options.derivative_direction = 'adjoint'
         self.driver.gradient_options.iprint = 1
 
         self.coupled_solver.atol = 1e-9

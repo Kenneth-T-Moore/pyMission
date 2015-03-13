@@ -175,16 +175,20 @@ model.driver.workflow.add(['seg1', 'seg2', 'seg3'])
 #plot_system_tree(model._system)
 
 start = time.time()
-model.run()
+model._setup()
+from openmdao.util.dotgraph import plot_system_tree
+plot_system_tree(model._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
+exit()
+#model.run()
 
 print "."
 if MPI:
     comm = model._system.mpi.comm
-    fuelburn = (model.seg1.SysFuelObj.fuelburn, model.seg2.SysFuelObj.fuelburn, 
+    fuelburn = (model.seg1.SysFuelObj.fuelburn, model.seg2.SysFuelObj.fuelburn,
                 model.seg3.SysFuelObj.fuelburn)
     dist_seg = comm.gather(fuelburn, root=0)
     if MPI.COMM_WORLD.rank == 0:
-        
+
         print "seg1 fuel burn", max(dist_seg[0][0], dist_seg[1][0], dist_seg[2][0])
         print "seg2 fuel burn", max(dist_seg[0][1], dist_seg[1][1], dist_seg[2][1])
         print "seg3 fuel burn", max(dist_seg[0][2], dist_seg[1][2], dist_seg[2][2])

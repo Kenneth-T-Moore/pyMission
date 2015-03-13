@@ -176,38 +176,20 @@ class AllocationProblem(Assembly):
             for inac in xrange(self.num_new_ac):
                 seg_name = 'Seg_%03i_%03i'%(irt,inac)
                 self.missions.workflow.add(seg_name)
-#        self.missions.system_type = 'parallel'
+        self.missions.system_type = 'parallel'
         self.missions.gradient_options.lin_solver = "linear_gs"
         self.missions.gradient_options.iprint = 0
 
-        self.driver.workflow.add(['missions', 'SysProfit', 'SysPaxCon', 'SysAircraftCon'])
+
+        self.add('stuff', Driver())
+        self.stuff.system_type = "serial"
+        self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
+
+        self.driver.workflow.add(['missions', 'stuff'])
 
 
 if __name__ == '__main__':
     from subprocess import call
-
-    def setup_opt(seg):
-        asm = set_as_top(Assembly())
-        asm.add('driver', pyOptSparseDriver())
-        asm.driver.optimizer = 'SNOPT'
-        asm.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
-        asm.driver.gradient_options.lin_solver = "linear_gs"
-        asm.driver.gradient_options.maxiter = 1
-        asm.driver.gradient_options.derivative_direction = 'adjoint'
-        asm.driver.gradient_options.iprint = 0
-        asm.driver.system_type = 'serial'
-
-        asm.add('segment', seg)
-        asm.driver.add_objective('segment.fuelburn')
-        asm.driver.add_parameter('segment.h_pt', low=0.0, high=14.1)
-        asm.driver.add_constraint('segment.h[0] = 0.0')
-        asm.driver.add_constraint('segment.h[-1] = 0.0')
-        asm.driver.add_constraint('segment.Tmin < 0.0')
-        asm.driver.add_constraint('segment.Tmax < 0.0')
-        asm.driver.add_constraint('%.15f < segment.Gamma < %.15f' % \
-                                  (alloc.gamma_lb,alloc.gamma_ub), linear=True)
-
-        return asm
 
     def var_dump(asmb, indent=0):
         spaces = indent * " "
@@ -245,17 +227,17 @@ if __name__ == '__main__':
     alloc.driver.optimizer = 'SNOPT'
     alloc.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
     alloc.driver.gradient_options.lin_solver = "linear_gs"
-#    alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
+    # alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
     alloc.driver.gradient_options.maxiter = 1
     alloc.driver.gradient_options.derivative_direction = 'adjoint'
     alloc.driver.gradient_options.iprint = 0
-    alloc.driver.system_type = 'serial'
+    # alloc.driver.system_type = 'serial'
 
     alloc.driver.add_objective('profit')
     for irt in xrange(alloc.num_routes):
         for inac in xrange(alloc.num_new_ac):
             seg_name = 'Seg_%03i_%03i' % (irt,inac)
-            alloc.driver.add_parameter(seg_name+'.h_pt', low=0.0, high=14.1)
+            alloc.driver.add_parameter(seg_name+'.h_pt', low=0.0, high=15.0) #14.1)
             alloc.driver.add_constraint(seg_name+'.h[0] = 0.0')
             alloc.driver.add_constraint(seg_name+'.h[-1] = 0.0')
             alloc.driver.add_constraint(seg_name+'.Tmin < 0.0')
@@ -263,12 +245,19 @@ if __name__ == '__main__':
             alloc.driver.add_constraint('%.15f < '%(alloc.gamma_lb) + seg_name
                                         + '.Gamma < %.15f'%(alloc.gamma_ub),
                                         linear=True)
+
+    # alloc._setup()
+    # #from openmdao.util.dotgraph import plot_system_tree
+    # #plot_system_tree(alloc._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
+    # exit()
     alloc.run()
+
+    exit()
 
     alloc.driver.clear_objectives()
     alloc.driver.clear_parameters()
     alloc.driver.clear_constraints()
-    
+
     if MPI.COMM_WORLD.rank == 0:
         call(['mv', 'SNOPT_print.out', 'SNOPT_pre_print.out' % (irt,inac)])
         call(['rm', 'SNOPT_summary.out'])

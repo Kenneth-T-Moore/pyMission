@@ -177,7 +177,8 @@ class AllocationProblem(Assembly):
                 seg_name = 'Seg_%03i_%03i'%(irt,inac)
                 self.missions.workflow.add(seg_name)
         self.missions.system_type = 'parallel'
-        self.missions.gradient_options.lin_solver = "linear_gs"
+        #self.missions.gradient_options.lin_solver = "linear_gs"
+        self.missions.gradient_options.lin_solver = "petsc_ksp"
         self.missions.gradient_options.iprint = 0
 
 
@@ -226,9 +227,9 @@ if __name__ == '__main__':
     alloc.replace('driver', pyOptSparseDriver())
     alloc.driver.optimizer = 'SNOPT'
     alloc.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
-    alloc.driver.gradient_options.lin_solver = "linear_gs"
-    # alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
-    alloc.driver.gradient_options.maxiter = 1
+    # alloc.driver.gradient_options.lin_solver = "linear_gs"
+    alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
+    # alloc.driver.gradient_options.maxiter = 1
     alloc.driver.gradient_options.derivative_direction = 'adjoint'
     alloc.driver.gradient_options.iprint = 0
     # alloc.driver.system_type = 'serial'

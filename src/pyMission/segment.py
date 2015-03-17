@@ -28,14 +28,14 @@ from pyMission.bsplines import SysXBspline, SysHBspline, SysMVBspline, \
                                SysGammaBspline, setup_MBI
 from pyMission.coupled_analysis import SysCLTar, SysCTTar, SysFuelWeight
 from pyMission.functionals import SysTmin, SysTmax, SysSlopeMin, SysSlopeMax, \
-                                  SysFuelObj, SysBlockTime 
+                                  SysFuelObj, SysBlockTime
 from pyMission.propulsion import SysSFC, SysTau
 
 import check_deriv_patch
 import unconn_patch
 
 
-def is_differentiable(self): 
+def is_differentiable(self):
     return True
 Driver.is_differentiable = is_differentiable
 
@@ -283,7 +283,7 @@ class MissionSegment(Assembly):
         #-------------------------
         # Driver Settings
         #-------------------------
-
+        
         self.driver.gradient_options.lin_solver = "linear_gs"
         self.driver.gradient_options.maxiter = 1
         self.driver.gradient_options.derivative_direction = 'adjoint'
@@ -334,7 +334,7 @@ if __name__ == "__main__":
 
     # Calculate velocity from the Mach we have specified.
     model.SysSpeed.v_specified = False
-    
+
     # Initial parameters
     model.S = 427.8/1e2
     model.ac_w = 210000*9.81/1e6

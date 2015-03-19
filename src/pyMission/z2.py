@@ -188,9 +188,9 @@ class AllocationProblem(Assembly):
         #self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
         self.stuff.workflow.add(['SysProfit'])
 
-        #self.driver.workflow.add(['missions', 'stuff'])
-        #self.driver.workflow.add(['SysProfit'])
-        self.driver.workflow.add(['stuff'])
+        self.driver.workflow.add(['missions', 'stuff'])
+        self.driver.workflow.add(['SysProfit'])
+        #self.driver.workflow.add(['stuff'])
 
 
 if __name__ == '__main__':
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     #alloc.driver.check_gradient()
     #from openmdao.util.dotgraph import plot_system_tree
     #plot_system_tree(alloc._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
-    J = alloc.driver.calc_gradient(return_format='dict')
+    #J = alloc.driver.calc_gradient(return_format='dict')
 
     for key1, val1 in J.iteritems():
         for key2, val2 in val1.iteritems():

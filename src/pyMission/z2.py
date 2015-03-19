@@ -185,11 +185,11 @@ class AllocationProblem(Assembly):
 
         self.add('stuff', Driver())
         self.stuff.system_type = "serial"
-        #self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
-        self.stuff.workflow.add(['SysProfit'])
+        self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
+        #self.stuff.workflow.add(['SysProfit'])
 
         self.driver.workflow.add(['missions', 'stuff'])
-        self.driver.workflow.add(['SysProfit'])
+        #self.driver.workflow.add(['SysProfit'])
         #self.driver.workflow.add(['stuff'])
 
 
@@ -245,13 +245,13 @@ if __name__ == '__main__':
         for inac in xrange(alloc.num_new_ac):
             seg_name = 'Seg_%03i_%03i' % (irt,inac)
             alloc.driver.add_parameter(seg_name+'.h_pt', low=0.0, high=15.0) #14.1)
-            #alloc.driver.add_constraint(seg_name+'.h[0] = 0.0')
-            #alloc.driver.add_constraint(seg_name+'.h[-1] = 0.0')
-            #alloc.driver.add_constraint(seg_name+'.Tmin < 0.0')
-            #alloc.driver.add_constraint(seg_name+'.Tmax < 0.0')
-            #alloc.driver.add_constraint('%.15f < '%(alloc.gamma_lb) + seg_name
-                                        #+ '.Gamma < %.15f'%(alloc.gamma_ub),
-                                        #linear=True)
+            alloc.driver.add_constraint(seg_name+'.h[0] = 0.0')
+            alloc.driver.add_constraint(seg_name+'.h[-1] = 0.0')
+            alloc.driver.add_constraint(seg_name+'.Tmin < 0.0')
+            alloc.driver.add_constraint(seg_name+'.Tmax < 0.0')
+            alloc.driver.add_constraint('%.15f < '%(alloc.gamma_lb) + seg_name
+                                        + '.Gamma < %.15f'%(alloc.gamma_ub),
+                                        linear=True)
 
     # alloc._setup()
     # exit()
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     #alloc.driver.check_gradient()
     #from openmdao.util.dotgraph import plot_system_tree
     #plot_system_tree(alloc._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
-    #J = alloc.driver.calc_gradient(return_format='dict')
+    J = alloc.driver.calc_gradient(return_format='dict')
 
     for key1, val1 in J.iteritems():
         for key2, val2 in val1.iteritems():

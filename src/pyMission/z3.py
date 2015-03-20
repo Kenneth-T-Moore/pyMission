@@ -176,21 +176,17 @@ class AllocationProblem(Assembly):
             for inac in xrange(self.num_new_ac):
                 seg_name = 'Seg_%03i_%03i'%(irt,inac)
                 self.missions.workflow.add(seg_name)
-                #self.driver.workflow.add(seg_name)
         self.missions.system_type = 'parallel'
-        self.missions.gradient_options.lin_solver = "linear_gs"
-        #self.missions.gradient_options.lin_solver = "petsc_ksp"
-        #self.missions.gradient_options.iprint = 0
+        #self.missions.gradient_options.lin_solver = "linear_gs"
+        self.missions.gradient_options.lin_solver = "petsc_ksp"
+        self.missions.gradient_options.iprint = 0
 
 
         self.add('stuff', Driver())
         self.stuff.system_type = "serial"
         self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
-        #self.stuff.workflow.add(['SysProfit'])
 
         self.driver.workflow.add(['missions', 'stuff'])
-        #self.driver.workflow.add(['SysProfit'])
-        #self.driver.workflow.add(['stuff'])
 
 
 if __name__ == '__main__':
@@ -209,7 +205,7 @@ if __name__ == '__main__':
                 print spaces + "var: ", k,
                 pp(v, indent=indent)
 
-    alloc = set_as_top(AllocationProblem('z_3_2.py'))
+    alloc = set_as_top(AllocationProblem('problem_3rt_2ac.py'))
     if 0:
         alloc.run()
         var_dump(alloc)
@@ -233,9 +229,9 @@ if __name__ == '__main__':
     #alloc.replace('driver', pyOptSparseDriver())
     alloc.driver.optimizer = 'SNOPT'
     alloc.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
-    #alloc.driver.gradient_options.lin_solver = "linear_gs"
-    #alloc.driver.gradient_options.maxiter = 1
+    # alloc.driver.gradient_options.lin_solver = "linear_gs"
     alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
+    # alloc.driver.gradient_options.maxiter = 1
     alloc.driver.gradient_options.derivative_direction = 'adjoint'
     alloc.driver.gradient_options.iprint = 0
     # alloc.driver.system_type = 'serial'
@@ -254,12 +250,11 @@ if __name__ == '__main__':
                                         #linear=True)
 
     # alloc._setup()
+    # #from openmdao.util.dotgraph import plot_system_tree
+    # #plot_system_tree(alloc._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
     # exit()
     alloc.run()
 
-    #alloc.driver.check_gradient()
-    #from openmdao.util.dotgraph import plot_system_tree
-    #plot_system_tree(alloc._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
     J = alloc.driver.calc_gradient(return_format='dict')
 
     for key1, val1 in J.iteritems():

@@ -176,10 +176,10 @@ model.driver.workflow.add(['seg1', 'seg2', 'seg3'])
 
 start = time.time()
 model._setup()
-from openmdao.util.dotgraph import plot_system_tree
-plot_system_tree(model._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
-exit()
-#model.run()
+#from openmdao.util.dotgraph import plot_system_tree
+#plot_system_tree(model._system, 'sys_tree_%d.pdf'%MPI.COMM_WORLD.rank)
+#exit()
+model.run()
 
 print "."
 if MPI:

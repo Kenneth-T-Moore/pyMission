@@ -82,6 +82,7 @@ class AllocationProblem(Assembly):
                 seg.driver.system_type = 'serial'
                 seg.coupled_solver.system_type = 'serial'
                 seg.driver.gradient_options.iprint = 0
+                seg.driver.gradient_options.derivative_direction = 'adjoint'
                 seg.coupled_solver.gradient_options.iprint = 0
                 seg.coupled_solver.iprint = 0
 #                seg.coupled_solver.gradient_options.iprint = 0
@@ -175,18 +176,20 @@ class AllocationProblem(Assembly):
         for irt in xrange(self.num_routes):
             for inac in xrange(self.num_new_ac):
                 seg_name = 'Seg_%03i_%03i'%(irt,inac)
-                self.missions.workflow.add(seg_name)
+                self.driver.workflow.add(seg_name)
         self.missions.system_type = 'parallel'
         #self.missions.gradient_options.lin_solver = "linear_gs"
+        #self.missions.gradient_options.maxiter = 1
         self.missions.gradient_options.lin_solver = "petsc_ksp"
         self.missions.gradient_options.iprint = 0
 
 
-        self.add('stuff', Driver())
-        self.stuff.system_type = "serial"
-        self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
+        #self.add('stuff', Driver())
+        #self.stuff.system_type = "serial"
+        #self.stuff.workflow.add(['SysProfit', 'SysPaxCon', 'SysAircraftCon'])
 
-        self.driver.workflow.add(['missions', 'stuff'])
+        #self.driver.workflow.add(['missions', 'stuff'])
+        #self.driver.workflow.add(['missions'])
 
 
 if __name__ == '__main__':
@@ -229,22 +232,22 @@ if __name__ == '__main__':
     #alloc.replace('driver', pyOptSparseDriver())
     alloc.driver.optimizer = 'SNOPT'
     alloc.driver.options = {'Iterations limit': 5000000}#, 'Verify level':3}
-    # alloc.driver.gradient_options.lin_solver = "linear_gs"
     alloc.driver.gradient_options.lin_solver = 'petsc_ksp'
-    # alloc.driver.gradient_options.maxiter = 1
+    #alloc.driver.gradient_options.lin_solver = "linear_gs"
+    #alloc.driver.gradient_options.maxiter = 1
     alloc.driver.gradient_options.derivative_direction = 'adjoint'
     alloc.driver.gradient_options.iprint = 0
     # alloc.driver.system_type = 'serial'
 
-    alloc.driver.add_objective('profit')
+    #alloc.driver.add_objective('profit')
     for irt in xrange(alloc.num_routes):
         for inac in xrange(alloc.num_new_ac):
             seg_name = 'Seg_%03i_%03i' % (irt,inac)
             alloc.driver.add_parameter(seg_name+'.h_pt', low=0.0, high=15.0) #14.1)
-            #alloc.driver.add_constraint(seg_name+'.h[0] = 0.0')
-            #alloc.driver.add_constraint(seg_name+'.h[-1] = 0.0')
-            #alloc.driver.add_constraint(seg_name+'.Tmin < 0.0')
-            #alloc.driver.add_constraint(seg_name+'.Tmax < 0.0')
+            alloc.driver.add_constraint(seg_name+'.h[0] = 0.0')
+            alloc.driver.add_constraint(seg_name+'.h[-1] = 0.0')
+            alloc.driver.add_constraint(seg_name+'.Tmin < 0.0')
+            alloc.driver.add_constraint(seg_name+'.Tmax < 0.0')
             #alloc.driver.add_constraint('%.15f < '%(alloc.gamma_lb) + seg_name
                                         #+ '.Gamma < %.15f'%(alloc.gamma_ub),
                                         #linear=True)
@@ -255,11 +258,33 @@ if __name__ == '__main__':
     # exit()
     alloc.run()
 
-    J = alloc.driver.calc_gradient(return_format='dict')
+    inputs = ['seg1.h_pt']
 
-    for key1, val1 in J.iteritems():
-        for key2, val2 in val1.iteritems():
-            print key1, key2, val2
+    from time import time
+    t0 = time()
+    #J = alloc.driver.calc_gradient(return_format='dict')
+    import cProfile
+    import pstats
+    import sys
+    from openmdao.main.mpiwrap import MPI
+    if MPI:
+        fname = 'profout%d'%MPI.COMM_WORLD.rank
+    else:
+        fname = 'profout'
+    cProfile.run('J=alloc.driver.calc_gradient(return_format="dict")', fname)
+    p = pstats.Stats(fname)
+    p.strip_dirs()
+    p.sort_stats('time')
+    p.print_stats()
+    print '\n\n---------------------\n\n'
+    p.print_callers()
+    print '\n\n---------------------\n\n'
+    p.print_callees()
+    print "Gradient time:", time()-t0
+
+    #for key1, val1 in J.iteritems():
+    #    for key2, val2 in val1.iteritems():
+    #        print key1, key2, val2
 
     exit()
 

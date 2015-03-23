@@ -11,6 +11,11 @@ from openmdao.lib.casehandlers.api import BSONCaseRecorder
 
 from pyoptsparse_driver.pyoptsparse_driver import pyOptSparseDriver
 from pyMission.segment import MissionSegment
+from pyMission.bsplines import setup_MBI
+from pyMission.aeroTripan import setup_surrogate
+
+aero_surr = {}
+aero_surr['CL'], aero_surr['CD'], aero_surr['CM'], aero_surr['nums'] = setup_surrogate('crm_surr')
 
 # Same discretization for each segment for now.
 num_elem = 250
@@ -38,9 +43,12 @@ x_range *= 1.852
 x_init = x_range * 1e3 * (1-np.cos(np.linspace(0, 1, num_cp)*np.pi))/2/1e6
 M_init = np.ones(num_cp)*0.82
 h_init = 10 * np.sin(np.pi * x_init / (x_range/1e3))
+jac_h, jac_gamma = setup_MBI(num_elem+1, num_cp, x_init)
 
 model.add('seg1', MissionSegment(num_elem=num_elem, num_cp=num_cp,
-                                 x_pts=x_init, surr_file='crm_surr'))
+                                 x_pts=x_init, params_file='CRM_params.py',
+                                 aero_surr=aero_surr,
+                                 jac_h=jac_h, jac_gamma=jac_gamma))
 
 # Initial value of the parameter
 model.seg1.h_pt = h_init
@@ -82,9 +90,12 @@ x_range *= 1.852
 x_init = x_range * 1e3 * (1-np.cos(np.linspace(0, 1, num_cp)*np.pi))/2/1e6
 M_init = np.ones(num_cp)*0.82
 h_init = 10 * np.sin(np.pi * x_init / (x_range/1e3))
+jac_h, jac_gamma = setup_MBI(num_elem+1, num_cp, x_init)
 
 model.add('seg2', MissionSegment(num_elem=num_elem, num_cp=num_cp,
-                                 x_pts=x_init, surr_file='crm_surr'))
+                                 x_pts=x_init, params_file='CRM_params.py',
+                                 aero_surr=aero_surr,
+                                 jac_h=jac_h, jac_gamma=jac_gamma))
 
 # Initial value of the parameter
 model.seg2.h_pt = h_init
@@ -126,9 +137,12 @@ x_range *= 1.852
 x_init = x_range * 1e3 * (1-np.cos(np.linspace(0, 1, num_cp)*np.pi))/2/1e6
 M_init = np.ones(num_cp)*0.82
 h_init = 10 * np.sin(np.pi * x_init / (x_range/1e3))
+jac_h, jac_gamma = setup_MBI(num_elem+1, num_cp, x_init)
 
 model.add('seg3', MissionSegment(num_elem=num_elem, num_cp=num_cp,
-                                 x_pts=x_init, surr_file='crm_surr'))
+                                 x_pts=x_init, params_file='CRM_params.py',
+                                 aero_surr=aero_surr,
+                                 jac_h=jac_h, jac_gamma=jac_gamma))
 
 # Initial value of the parameter
 model.seg3.h_pt = h_init
@@ -178,21 +192,21 @@ model.driver.add_parameter('seg1.h_pt', low=0.0, high=14.1)
 model.driver.add_parameter('seg2.h_pt', low=0.0, high=14.1)
 model.driver.add_parameter('seg3.h_pt', low=0.0, high=14.1)
 
-model.driver.gradient_options.iprint = 1
-model.driver.gradient_options.lin_solver = 'linear_gs'
-model.driver.gradient_options.maxiter = 1
-#model.driver.gradient_options.lin_solver = 'petsc_ksp'
+#model.driver.gradient_options.iprint = 1
+#model.driver.gradient_options.lin_solver = 'linear_gs'
+#model.driver.gradient_options.maxiter = 1
+model.driver.gradient_options.lin_solver = 'petsc_ksp'
 
-start = time.time()
 model.run()
-J = model.driver.workflow.calc_gradient(return_format='dict')
+start = time.time()
+J = model.driver.calc_gradient(return_format='dict')
 
-print "."
-if MPI:
-    J = model.driver.workflow._system.get_combined_J(J)
-    if MPI.COMM_WORLD.rank == 0:
-        print J
-else:
-    print "J", J
+#print "."
+#if MPI:
+    #J = model.driver.workflow._system.get_combined_J(J)
+    #if MPI.COMM_WORLD.rank == 0:
+        #print J
+#else:
+    #print "J", J
 print 'Simulation TIME:', time.time() - start
 
